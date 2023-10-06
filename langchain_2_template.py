@@ -13,10 +13,6 @@ from langchain.prompts.chat import (
   SystemMessagePromptTemplate,
   HumanMessagePromptTemplate,
 )
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
-
 
 def print_start() -> None:
   # 프로그램 시작 시간 기록
@@ -45,11 +41,13 @@ async def process_output(output):
 
 
 
+class MyCustomHandler(BaseCallbackHandler):
+  def on_llm_new_token(self, token: str, **kwargs) -> None:
+    print(token, end='')
+
 
 def main() -> None:
-  # handler = StreamingStdOutCallbackHandler()
-  handler = AsyncIteratorCallbackHandler(process_output)
-  chat = ChatOpenAI(temperature=0, model=llm_model, streaming=True) # 번역을 항상 같게 하기 위해서 설정
+  chat = ChatOpenAI(temperature=0, model=llm_model) # 번역을 항상 같게 하기 위해서 설정
 
   template="You are a helpful assisstant that tranlates {input_language} to {output_language}."
   system_message_prompt = SystemMessagePromptTemplate.from_template(template)
@@ -68,7 +66,8 @@ The US will transfer thousands of seized Iranian weapons and rounds of ammunitio
 """
 
   print_start()
-  response = chatchain.run(input_language="English", output_language="Korean", text=text, callbacks=[handler])
+  response = chatchain.run(input_language="English", output_language="Korean", text=text)
+
   print_end()
 
   print(response)

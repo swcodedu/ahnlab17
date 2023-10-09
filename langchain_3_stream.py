@@ -14,9 +14,6 @@ from langchain.prompts.chat import (
   HumanMessagePromptTemplate,
 )
 from langchain.callbacks.base import BaseCallbackHandler
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-
-from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 
 
 def print_start() -> None:
@@ -38,13 +35,6 @@ llm_model = "gpt-3.5-turbo"
 load_dotenv()
 
 
-async def process_output(output):
-    # do some async processing of the output
-    await asyncio.sleep(1)
-    processed = f"Processed: {output}"
-    return processed
-
-
 
 class MyCustomHandler(BaseCallbackHandler):
   def on_llm_new_token(self, token: str, **kwargs) -> None:
@@ -52,8 +42,6 @@ class MyCustomHandler(BaseCallbackHandler):
 
 
 def main() -> None:
-  # handler = StreamingStdOutCallbackHandler()
-  # handler = AsyncIteratorCallbackHandler()
   handler = MyCustomHandler()
   chat = ChatOpenAI(temperature=0, model=llm_model, streaming=True) # 번역을 항상 같게 하기 위해서 설정
 

@@ -52,7 +52,8 @@ if __name__ == '__main__':
       collected_chunks.append(chunk)  # save the event response
       chunk_message = chunk['choices'][0]['delta']  # extract the message
       collected_messages.append(chunk_message)  # save the message
-      print(f"Message received {chunk_time:.2f} seconds after request: {chunk_message.get('content', '')}")  # print the delay and text
+      # print(f"Message received {chunk_time:.2f} seconds after request: {chunk_message.get('content', '')}")  # print the delay and text
+      print(chunk_message.get('content', ''), end='')
 
   # print the time delay and text received
   print(f"Full response received {chunk_time:.2f} seconds after request")

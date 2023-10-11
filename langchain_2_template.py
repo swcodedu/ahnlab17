@@ -1,7 +1,4 @@
-import os
 import time
-import json
-import asyncio
 
 from dotenv import load_dotenv
 
@@ -31,19 +28,6 @@ def print_end() -> None:
 llm_model = "gpt-3.5-turbo"
 
 load_dotenv()
-
-
-async def process_output(output):
-    # do some async processing of the output
-    await asyncio.sleep(1)
-    processed = f"Processed: {output}"
-    return processed
-
-
-
-class MyCustomHandler(BaseCallbackHandler):
-  def on_llm_new_token(self, token: str, **kwargs) -> None:
-    print(token, end='')
 
 
 def main() -> None:

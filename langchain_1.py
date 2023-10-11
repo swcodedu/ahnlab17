@@ -11,7 +11,6 @@ from langchain.schema import (
   HumanMessage,
   SystemMessage
 )
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 llm_model = "gpt-3.5-turbo"
 
@@ -33,7 +32,7 @@ def print_end() -> None:
 load_dotenv()
 
 def main()->None:
-  chat = ChatOpenAI(model=llm_model, streaming=True, callbacks=[StreamingStdOutCallbackHandler()])
+  chat = ChatOpenAI(model=llm_model)
 
   sys = SystemMessage(content="당신은 음악 추천을 해주는 전문 AI입니다.")
   msg = HumanMessage(content='1980년대 메탈 음악 5곡 추천해줘.')

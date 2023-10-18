@@ -6,3 +6,10 @@ pip install --upgrade pandas
 pip install --upgrade wikipedia
 pip install --upgrade DateTime
 pip install --upgrade numexpr
+pip install --upgrade google-search-results
+pip install --upgrade faiss-cpu
+pip install --upgrade sentence_transformers
+pip install --upgrade unstructured
+pip install --upgrade pdf2image
+pip install --upgrade pdfminer.six
+pip install --upgrade pypdf

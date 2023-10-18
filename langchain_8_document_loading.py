@@ -68,4 +68,13 @@ def test_url() -> None:
 
 
 
+if __name__ == '__main__':
+  test_pdf()
+  test_youtube()
+  test_url()
+
+
+
+
+
 

@@ -23,7 +23,7 @@ sys.path.append(os.getenv("PYTHONPATH"))
 
 
 
-from utils import ( load_pdfs, load_pdf )
+from utils import ( load_pdf_vectordb )
 
 
 # ## Embeddings
@@ -69,37 +69,11 @@ from langchain.vectorstores import FAISS
 from langchain.vectorstores import Chroma
 from langchain.schema.vectorstore import VectorStore
 
-persist_directory = 'vectordb/faiss-nj/'
-
-def save_vectordb( embedding : Embeddings, documents: List[Document] ) -> VectorStore:
-  # vectordb = Chroma.from_documents(
-  vectordb = FAISS.from_documents(
-    documents=documents,
-    embedding=embedding
-  )
-  print(f"len(vectordb))=>{vectordb.index.ntotal / vectordb.index.d}")
-  print(f"save local => {persist_directory}")
-  vectordb.save_local(persist_directory)
-  return vectordb
-
-def load_vectordb(embedding : Embeddings) -> VectorStore:
-  vectordb = FAISS.load_local(embeddings=embedding, folder_path=persist_directory)
-  print(f"load local => {persist_directory}")
-  print(f"len(vectordb))=>{vectordb.index.ntotal / vectordb.index.d}")
-  return vectordb
-
-
 
 def test_vectordb() -> None:
-  vectordb : VectorStore = None
-  documents : List[Document] = None
-  if not os.path.exists(persist_directory):
-    documents = load_pdf("./data/프리랜서 가이드라인 (출판본).pdf", True)
-    vectordb = save_vectordb(OpenAIEmbeddings(), documents )
-  else:
-    vectordb = load_vectordb(OpenAIEmbeddings())
+  vectordb : VectorStore = load_pdf_vectordb("./data/프리랜서 가이드라인 (출판본).pdf")
 
-  question = "OKKY는 무엇인가?"
+  question = "정규직의 장점은?"
   docs = vectordb.similarity_search(question,k=3)
 
   print(f"len(docs)=>{len(docs)}")
@@ -108,7 +82,7 @@ def test_vectordb() -> None:
 
 
 if __name__ == '__main__':
-  test_embed_openai()
+  # test_embed_openai()
   test_embed_hugging_face()
 
   test_vectordb()

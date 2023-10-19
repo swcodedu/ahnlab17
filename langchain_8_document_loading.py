@@ -27,10 +27,12 @@ openai.organization = os.getenv("ORGANIZATION")
 from langchain.document_loaders import PyPDFLoader
 
 def test_pdf() -> None:
-  loader = PyPDFLoader("./data/프리랜서 가이드라인 (출판본).pdf")
+  file = "./data/프리랜서 가이드라인 (출판본).pdf"
+  loader = PyPDFLoader(file)
   pages = loader.load()
+  print(f"{file} 파일을 로딩했습니다.")
   print(f"len(pages) => {len(pages)}")
-  page = pages[0]
+  page = pages[1]
   print(page.page_content[0:500])
   print( f"page.metadata => {page.metadata}" )
   return None
@@ -63,14 +65,20 @@ from langchain.document_loaders import WebBaseLoader
 def test_url() -> None:
   loader = WebBaseLoader("https://ko.wikipedia.org/wiki/NewJeans")
   docs = loader.load()
+  print("위키에서 뉴진스 문서를 로딩했습니다.")
+  print(f"len(docs) => {len(docs)}")
   print(docs[0].page_content[:500])
+  print( f"docs[0].metadata => {docs[0].metadata}" )
   return None
 
 
 
 if __name__ == '__main__':
+  print('=' * 100)
   test_pdf()
-  test_youtube()
+  # print('=' * 100)
+  # test_youtube()  # ffmpeg 설치 필요.
+  print('=' * 100)
   test_url()
 
 

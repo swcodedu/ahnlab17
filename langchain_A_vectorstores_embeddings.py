@@ -23,7 +23,10 @@ sys.path.append(os.getenv("PYTHONPATH"))
 
 
 
-from utils import ( load_pdf_vectordb )
+from utils import (
+  load_pdf_vectordb,
+  load_vectordb_from_file
+  )
 
 
 # ## Embeddings
@@ -70,7 +73,7 @@ from langchain.vectorstores import Chroma
 from langchain.schema.vectorstore import VectorStore
 
 
-def test_vectordb() -> None:
+def test_pdf_vectordb() -> None:
   vectordb : VectorStore = load_pdf_vectordb("./data/프리랜서 가이드라인 (출판본).pdf")
 
   question = "정규직의 장점은?"
@@ -81,9 +84,21 @@ def test_vectordb() -> None:
   return None
 
 
+def test_csv_vectordb() -> None:
+  vectordb : VectorStore = load_vectordb_from_file("data/OutdoorClothingCatalog_1000.csv")
+
+  question = "Warm wool jac-shirt for drizzle or snow"
+  docs = vectordb.similarity_search(question,k=3)
+
+  print(f"len(docs)=>{len(docs)}")
+  print(f"docs[0].page_content=>{docs[0].page_content}")
+  return None
+
+
 if __name__ == '__main__':
   # test_embed_openai()
-  test_embed_hugging_face()
+  # test_embed_hugging_face()
 
-  test_vectordb()
+  # test_pdf_vectordb()
+  test_csv_vectordb()
 

@@ -3,6 +3,7 @@ import os
 import copy
 from typing import Iterable, List
 from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders.csv_loader import CSVLoader
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
@@ -132,7 +133,7 @@ def get_filename_without_extension(file_path):
   :return: 확장자를 제외한 파일명
   """
   # 파일 경로를 파싱하여 파일명과 확장자로 분리
-  file_name, file_extension = os.path.splitext(os.path.basename(file_path))
+  file_name, _ = os.path.splitext(os.path.basename(file_path))
 
   return file_name
 
@@ -170,6 +171,21 @@ def load_pdf(file: str, with_split: bool = False) -> List[Document]:
   return split_docs(pages)
 
 
+def load_csv(file: str, with_split: bool = False) -> List[Document]:
+  """
+  CSV 파일을 로드하는 함수입니다.
+
+  :param file: PDF 파일의 경로
+  :param with_split: 문서 분할 여부를 결정하는 부울 값
+  :return: Document 객체의 List
+  """
+  loader = CSVLoader(file_path=file, encoding='utf-8')
+  pages = loader.load()
+  if not with_split:
+    return pages
+
+  return split_docs(pages)
+
 
 def load_pdfs( files: Iterable[str], with_split: bool = False) -> List[Document]:
   """
@@ -187,6 +203,30 @@ def load_pdfs( files: Iterable[str], with_split: bool = False) -> List[Document]
   return docs
 
 
+def get_vectordb_path(path1: str, path2: str = None) -> str:
+  """
+  벡터 데이터베이스(.vectordb) 파일의 경로를 반환합니다.
+
+  :param path1: vector db가 위치할 상대 path 첫번째
+  :param path1: vector db가 위치할 상대 path 두번째 ( 기본값은 비어 있음 )
+  :return: 벡터 데이터베이스 폴더의 경로
+  """
+  # 설정된 VECTORDBPATH 환경 변수 또는 기본 경로를 사용하여 벡터 데이터베이스 폴더 경로 생성
+  path = os.path.join(ConfigManager.get_env("VECTORDBPATH", "./vectordb"), path1, path2)
+  return path
+
+
+def get_vectordb_path_by_file_path(file_path: str) -> str:
+  """
+  file path로 부터 벡터 데이터베이스(.vectordb) 파일의 경로를 반환합니다.
+  <vectordb root>/<ext>/<filename>로 구성된다.
+
+  :param file_path: 주어진 파일의 경로
+  :return: 벡터 데이터베이스 폴더의 경로
+  """
+
+  file_name, file_extension = os.path.splitext(os.path.basename(file_path))
+  return get_vectordb_path(file_extension[1:], file_name)
 
 
 def get_pdf_vectordb_path(file: str) -> str:
@@ -194,15 +234,13 @@ def get_pdf_vectordb_path(file: str) -> str:
   PDF 벡터 데이터베이스(.vectordb) 파일의 경로를 반환합니다.
 
   :param file: PDF 파일의 경로 또는 파일명
-  :return: PDF 벡터 데이터베이스 파일의 경로
+  :return: PDF 벡터 데이터베이스 폴더의 경로
   """
   # 파일명에서 확장자를 제외한 부분 추출
   file_name = get_filename_without_extension(file)
 
-  # 설정된 VECTORDBPATH 환경 변수 또는 기본 경로를 사용하여 PDF 벡터 데이터베이스 파일 경로 생성
-  path = os.path.join(ConfigManager.get_env("VECTORDBPATH", "./vectordb"), f"pdf/{file_name}")
+  return get_vectordb_path("pdf", file_name)
 
-  return path
 
 def save_vectordb(embedding: Embeddings, db_path: str, documents: List[Document]) -> VectorStore:
   """
@@ -258,4 +296,28 @@ def load_pdf_vectordb(file: str) -> VectorStore:
     # 벡터 데이터베이스 파일이 이미 존재하면 로드
     vectordb = load_vectordb(OpenAIEmbeddings(), db_path)
 
+  return vectordb
+
+
+
+def load_vectordb_from_file(file: str) -> VectorStore:
+  db_path = get_vectordb_path_by_file_path(file)
+
+  if os.path.exists(db_path):
+     # 벡터 데이터베이스 파일이 이미 존재하면 로드
+    vectordb = load_vectordb(OpenAIEmbeddings(), db_path)
+    return vectordb
+
+  _, ext = os.path.splitext(file)
+  ext = ext[1:]
+  documents: List[Document] = None
+
+  if ext == "dbf":
+    documents = load_pdf(file, True)
+  elif ext == "csv":
+    documents = load_csv(file, True)
+  else:
+    raise ValueError(f"지원하지 않는 파일 포맷입니다.:{os.path.basename(file)}")
+
+  vectordb = save_vectordb(OpenAIEmbeddings(), db_path, documents)
   return vectordb

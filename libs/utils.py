@@ -203,6 +203,19 @@ def load_pdfs( files: Iterable[str], with_split: bool = False) -> List[Document]
   return docs
 
 
+
+def replace_korean_with_code(s: str) -> str:
+    converted = ""
+    for c in s:
+        if c == ' ':  # 빈칸 확인
+            converted += '_'
+        elif '가' <= c <= '힣':  # 한글 범위 확인
+            converted += str(ord(c))
+        else:
+            converted += c
+    return converted
+
+
 def get_vectordb_path(path1: str, path2: str = None) -> str:
   """
   벡터 데이터베이스(.vectordb) 파일의 경로를 반환합니다.
@@ -211,6 +224,8 @@ def get_vectordb_path(path1: str, path2: str = None) -> str:
   :param path1: vector db가 위치할 상대 path 두번째 ( 기본값은 비어 있음 )
   :return: 벡터 데이터베이스 폴더의 경로
   """
+  if not path2 == None:
+    path2 = replace_korean_with_code(path2)
   # 설정된 VECTORDBPATH 환경 변수 또는 기본 경로를 사용하여 벡터 데이터베이스 폴더 경로 생성
   path = os.path.join(ConfigManager.get_env("VECTORDBPATH", "./vectordb"), path1, path2)
   return path
@@ -312,7 +327,7 @@ def load_vectordb_from_file(file: str) -> VectorStore:
   ext = ext[1:]
   documents: List[Document] = None
 
-  if ext == "dbf":
+  if ext == "pdf":
     documents = load_pdf(file, True)
   elif ext == "csv":
     documents = load_csv(file, True)

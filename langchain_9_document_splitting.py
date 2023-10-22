@@ -32,7 +32,7 @@ This can convey to the reader, which idea's are related. For example, closely re
 are in sentances. Similar ideas are in paragraphs. Paragraphs form a document. \n\n  \
 Paragraphs are often delimited with a carriage return or two carriage returns. \
 Carriage returns are the "backslash n" you see embedded in this string. \
-Sentences have a period at the end, but also, have a space.\
+Sentences have a period at the end, but also, have a space. \
 and words are separated by space."""
 
 

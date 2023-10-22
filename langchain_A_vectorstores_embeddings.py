@@ -87,7 +87,13 @@ def test_pdf_vectordb() -> None:
 def test_csv_vectordb() -> None:
   vectordb : VectorStore = load_vectordb_from_file("data/OutdoorClothingCatalog_1000.csv")
 
-  question = "Warm wool jac-shirt for drizzle or snow"
+  question = "A shirt that is wrinkle-resistant and breathable"
+  docs = vectordb.similarity_search(question,k=3)
+
+  print(f"len(docs)=>{len(docs)}")
+  print(f"docs[0].page_content=>{docs[0].page_content}")
+
+  question = "주름이 잘 잡히지 않으면서 통기성이 좋은 셔츠"
   docs = vectordb.similarity_search(question,k=3)
 
   print(f"len(docs)=>{len(docs)}")
@@ -96,9 +102,9 @@ def test_csv_vectordb() -> None:
 
 
 if __name__ == '__main__':
-  # test_embed_openai()
-  # test_embed_hugging_face()
+  test_embed_openai()
+  test_embed_hugging_face()
 
-  # test_pdf_vectordb()
+  test_pdf_vectordb()
   test_csv_vectordb()
 

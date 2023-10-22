@@ -133,7 +133,7 @@ def get_filename_without_extension(file_path):
   :return: 확장자를 제외한 파일명
   """
   # 파일 경로를 파싱하여 파일명과 확장자로 분리
-  file_name, file_extension = os.path.splitext(os.path.basename(file_path))
+  file_name, _ = os.path.splitext(os.path.basename(file_path))
 
   return file_name
 
@@ -226,7 +226,7 @@ def get_vectordb_path_by_file_path(file_path: str) -> str:
   """
 
   file_name, file_extension = os.path.splitext(os.path.basename(file_path))
-  return get_vectordb_path(file_extension, file_name)
+  return get_vectordb_path(file_extension[1:], file_name)
 
 
 def get_pdf_vectordb_path(file: str) -> str:
@@ -309,6 +309,7 @@ def load_vectordb_from_file(file: str) -> VectorStore:
     return vectordb
 
   _, ext = os.path.splitext(file)
+  ext = ext[1:]
   documents: List[Document] = None
 
   if ext == "dbf":

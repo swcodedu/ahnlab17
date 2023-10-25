@@ -166,3 +166,4 @@ venv/
 .vscode/
 
 vectordb/
+data/study_arms_raw.csv

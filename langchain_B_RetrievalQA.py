@@ -8,7 +8,7 @@ import os
 import time
 import json
 import sys
-from typing import Iterable, List
+from typing import Any, Iterable, List
 from langchain.docstore.document import Document
 
 import openai
@@ -24,6 +24,7 @@ sys.path.append(os.getenv("PYTHONPATH"))
 llm_model = "gpt-3.5-turbo"
 PDF_FILE = "./data/프리랜서 가이드라인 (출판본).pdf"
 CSV_FILE = "data/OutdoorClothingCatalog_1000.csv"
+CSV_FILE2 = "data/study_arms_raw.csv"
 
 from langchain.vectorstores import FAISS
 from langchain.vectorstores import Chroma
@@ -31,17 +32,54 @@ from langchain.schema.vectorstore import VectorStore
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 from utils import (
+  BusyIndicator,
+  ConsoleInput,
   load_pdf_vectordb,
   load_vectordb_from_file,
   get_vectordb_path_by_file_path
   )
 
+
+import re
+
+def reduce_newlines(input_string):
+  # 정규 표현식을 사용하여 연속된 '\n'을 하나로 치환
+  reduced_string = re.sub(r'\n{3,}', '\n\n', input_string)
+  return reduced_string
+
+
+def print_documents(docs: List[Any]) -> None:
+  if docs == None:
+    return
+
+  print(f"documents size: {len(docs)}")
+  p = lambda meta, key: print(f"{key}: {meta[key]}") if key in meta else None
+  for doc in docs:
+    print(f"source : {doc.metadata['source']}")
+    p(doc.metadata, 'row')
+    p(doc.metadata, 'page')
+    print(f"content: {reduce_newlines(doc.page_content)[0:500]}")
+    print('-'*30)
+
+def print_result(result: Any) -> None:
+  p = lambda key: print(f"{key}: {result[key]}") if key in result else None
+  p('query')
+  p('question')
+  print(f"result: {'-' * 22}" )
+  p('result')
+  p('answer')
+  print('-'*30)
+  if 'source_documents' in result:
+    print("documents")
+    print_documents(result['source_documents'])
+
+
 llm = ChatOpenAI(model_name=llm_model, temperature=0)
 
 def test_simple(vectordb, question)-> None:
-  # question = "프리랜서들이 피해야 할 회사는 어떤 회사인가?"
   docs = vectordb.similarity_search(question,k=3)
-  print(f"len(docs)=>{len(docs)}")
+  print(f"documents question: {question}")
+  print_documents(docs)
 
   qa_chain = RetrievalQA.from_chain_type(
     llm,
@@ -49,21 +87,25 @@ def test_simple(vectordb, question)-> None:
   )
 
   result = qa_chain({"query": question})
-  print(f"result['result']=>{result['result']}")
-
+  print('')
+  return print_result(result)
 
 
 from langchain.prompts import PromptTemplate
 
-def test_prompt(vectordb, question)-> None:
-  # Build prompt
-  # 마지막에 다음 문맥을 사용하여 질문에 답하세요. 답을 모르는 경우, 답을 지어내려고 하지 말고 모른다고만 말하세요. 최대 세 문장을 사용하세요. 가능한 한 간결하게 답변하세요. 답변 마지막에는 항상 "질문해 주셔서 감사합니다!"라고 말하세요.
-  template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. Use three sentences maximum. Keep the answer as concise as possible. Always say "thanks for asking!" at the end of the answer.
-    {context}
-    Question: {question}
-    Helpful Answer:"""
-  QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
+# Build prompt
+# 마지막에 다음 문맥을 사용하여 질문에 답하세요. 답을 모르는 경우, 답을 지어내려고 하지 말고 모른다고만 말하세요. 최대 세 문장을 사용하세요. 가능한 한 간결하게 답변하세요. 답변 마지막에는 항상 "질문해 주셔서 감사합니다!"라고 말하세요.
+template = """Use the following pieces of context to answer the question at the end. \
+  If you don't know the answer, just say that you don't know, don't try to make up an answer. \
+  Use three sentences maximum. Keep the answer as concise as possible. \
+  Always say "thanks for asking!" at the end of the answer.
+  {context}
+  Question: {question}
+  Helpful Answer:"""
+QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
 
+
+def test_prompt(vectordb, question)-> None:
   # Run chain
   qa_chain = RetrievalQA.from_chain_type(
     llm,
@@ -73,9 +115,8 @@ def test_prompt(vectordb, question)-> None:
   )
 
   result = qa_chain({"query": question})
-  print(f"result['result']=>{result['result']}")
-  print(f"result['source_documents'][0] = > {result['source_documents'][0]}")
-
+  print('')
+  return print_result(result)
 
 
 def test_map_reduce(vectordb, question)-> None:
@@ -86,7 +127,8 @@ def test_map_reduce(vectordb, question)-> None:
     chain_type="map_reduce"
   )
   result = qa_chain_mr({"query": question})
-  print(f"result['result']=>{result['result']}")
+  print('')
+  return print_result(result)
 
 '''
 Stuff 접근 방식은 다음과 같습니다:
@@ -111,6 +153,9 @@ Map-reduce 접근 방식은 다음 과정을 거칩니다:
 '''
 
 
+
+
+
 def test_pdf():
   print("="*30)
   vectordb : FAISS = load_vectordb_from_file(PDF_FILE)
@@ -121,12 +166,11 @@ def test_pdf():
   test_prompt(vectordb, q)
   test_map_reduce(vectordb, q)
 
-
 def test_csv():
   print("="*30)
   vectordb : FAISS = load_vectordb_from_file(CSV_FILE)
   print("Number of vectors in the index:", vectordb.index.ntotal)
-  q = "잘 구김가지 않고 통기성이 좋은 셔츠를 추천해줘"
+  q = "Can you recommend a shirt that doesn't wrinkle and is breathable?"
 
   test_simple(vectordb, q)
   test_prompt(vectordb, q)
@@ -135,7 +179,6 @@ def test_csv():
 
 
 if __name__ == '__main__':
-  # test_pdf()
+  test_pdf()
   test_csv()
-
 

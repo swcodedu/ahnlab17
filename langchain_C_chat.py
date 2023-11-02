@@ -25,7 +25,6 @@ sys.path.append(os.getenv("PYTHONPATH"))
 llm_model = "gpt-3.5-turbo"
 PDF_FILE = "./data/프리랜서 가이드라인 (출판본).pdf"
 CSV_FILE = "data/OutdoorClothingCatalog_1000.csv"
-CSV_FILE2 = "data/study_arms_raw.csv"
 
 from langchain.vectorstores import FAISS
 from langchain.vectorstores import Chroma
@@ -35,6 +34,7 @@ from langchain.chat_models import ChatOpenAI
 from utils import (
   BusyIndicator,
   ConsoleInput,
+  get_filename_without_extension,
   load_pdf_vectordb,
   load_vectordb_from_file,
   get_vectordb_path_by_file_path
@@ -80,6 +80,16 @@ llm = ChatOpenAI(model_name=llm_model, temperature=0)
 
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
+from langchain.prompts.prompt import PromptTemplate
+
+_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+
+Chat History:
+{chat_history}
+Follow Up Input: {question}
+Standalone question:"""
+CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
+
 
 def get_qa(vectordb) -> ConversationalRetrievalChain:
   memory = ConversationBufferMemory(
@@ -93,7 +103,10 @@ def get_qa(vectordb) -> ConversationalRetrievalChain:
       retriever=retriever,
       return_source_documents=True,
       return_generated_question=True,
-      memory=memory
+      max_tokens_limit=4097,
+      memory=memory,
+      # 추가된 영역
+      condense_question_prompt =  CONDENSE_QUESTION_PROMPT
   )
   return qa
 
@@ -184,14 +197,17 @@ def main():
     ]
   })
   debug, _ = input_select({
-    "title" : "debuging 모드로 하시겠습니까?",
+    "title" : "debugging 모드로 하시겠습니까?",
     "items" : [
       "yes",
       "no"
     ]
   })
 
-  vectordb : FAISS = load_vectordb_from_file(PDF_FILE if db == 1 else CSV_FILE)
+  file = PDF_FILE if db == 1 else CSV_FILE
+  busy_indicator = BusyIndicator.busy(True, f"{get_filename_without_extension(file)} db를 로딩 중입니다 ")
+  vectordb : FAISS = load_vectordb_from_file(file)
+  busy_indicator.stop()
   is_debug = debug == 1
 
 

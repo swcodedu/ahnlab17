@@ -91,6 +91,16 @@ db 값은
         }
 
         const promptValue = document.getElementById("prompt").value;
+        document.getElementById("prompt").value = ""; // Clear the input after submitting
+
+        const chatMessagesDiv = document.getElementById("chat-messages");
+
+        // Add user's message
+        const userMessageDiv = document.createElement("div");
+        userMessageDiv.className = "message user-message";
+        userMessageDiv.textContent = promptValue;
+        chatMessagesDiv.appendChild(userMessageDiv);
+
         const response = await fetch("/api/prompt", {
           method: "POST",
           headers: {
@@ -104,21 +114,11 @@ db 값은
 
         const data = await response.json();
 
-        const chatMessagesDiv = document.getElementById("chat-messages");
-
-        // Add user's message
-        const userMessageDiv = document.createElement("div");
-        userMessageDiv.className = "message user-message";
-        userMessageDiv.textContent = promptValue;
-        chatMessagesDiv.appendChild(userMessageDiv);
-
         // Add server's response
         const serverMessageDiv = document.createElement("div");
         serverMessageDiv.className = "message server-message";
         serverMessageDiv.textContent = data.result;
         chatMessagesDiv.appendChild(serverMessageDiv);
-
-        document.getElementById("prompt").value = ""; // Clear the input after submitting
       }
     </script>
   </body>

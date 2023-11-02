@@ -30,22 +30,23 @@ result : {
 
 """
 
+import threading
 from flask import Flask, request, send_from_directory
 from flask_restx import Api, Resource, fields
 import uuid
 import time
 
-
+is_debug = True
 app = Flask(__name__)
 
 
 @app.route('/')
 def serve_html():
-    return send_from_directory('./html-docs', 'index.html')
+  return send_from_directory('./html-docs', 'index.html')
 
 @app.route('/<path:path>')
 def serve_files(path):
-    return send_from_directory('./html-docs', path)
+  return send_from_directory('./html-docs', path)
 
 
 
@@ -55,45 +56,54 @@ ns = api.namespace('api', description='API operations')
 
 # Input Model for /new_token
 token_input_model = api.model('TokenInput', {
-    'db': fields.Integer(description='Database ID', required=True)  # 입력 모델
+  'db': fields.Integer(description='Database ID', required=True)  # 입력 모델
 })
 
 # Output Model for /new_token
 token_output_model = api.model('TokenOutput', {
-    'token': fields.String(description='Token string', required=True)  # 출력 모델
+  'token': fields.String(description='Token string', required=True)  # 출력 모델
 })
 
 # Model for /prompt
 prompt_model = api.model('PromptRequest', {
-    'token': fields.String(description='Token string', required=True),
-    'prompt': fields.String(description='Prompt string', required=True)
+  'token': fields.String(description='Token string', required=True),
+  'prompt': fields.String(description='Prompt string', required=True)
 })
 
 result_model = api.model('PromptResult', {
-    'result': fields.String(description='Result string', required=True)
+  'result': fields.String(description='Result string', required=True)
 })
 
 
 @ns.route('/new_token')
 class NewTokenResource(Resource):
-    @ns.expect(token_input_model)  # 입력 모델 적용
-    @ns.marshal_with(token_output_model, mask=False)  # 출력 모델 적용
-    def get(self):
-        db_value = request.args.get('db')  # URL query parameter에서 db 값을 가져옵니다.
-        # 원하는 db 처리 로직을 여기에 추가하실 수 있습니다.
-        return {'token': str(uuid.uuid4())}
+  @ns.expect(token_input_model)  # 입력 모델 적용
+  @ns.marshal_with(token_output_model, mask=False)  # 출력 모델 적용
+  def get(self):
+    db_value = request.args.get('db')  # URL query parameter에서 db 값을 가져옵니다.
+    # 원하는 db 처리 로직을 여기에 추가하실 수 있습니다.
+    return {'token': str(uuid.uuid4())}
 
 
+request_idx = 0
 @ns.route('/prompt')
 class PromptResource(Resource):
-    @ns.expect(prompt_model)
-    @ns.marshal_with(result_model, mask=False)
-    def post(self):
-        data = request.json
-        # You can process the prompt with the provided token here...
-        # For the sake of this example, we just return the prompt string with "Processed:" prefix
-        time.sleep(10)
-        return {'result': f'Processed: {data["prompt"]}'}
+  @ns.expect(prompt_model)
+  @ns.marshal_with(result_model, mask=False)
+  def post(self):
+    data = request.json
+    # You can process the prompt with the provided token here...
+    # For the sake of this example, we just return the prompt string with "Processed:" prefix
+    global request_idx
+    idx = request_idx
+    request_idx = request_idx + 1
+    if is_debug:
+      current_thread = threading.current_thread()
+      print(f"{idx}.{data['token']} 현재 스레드: {current_thread.name} reqeust.")
+    time.sleep(10)
+    if is_debug:
+      print(f"{idx}.{data['token']} end.")
+    return {'result': f'Processed: {data["prompt"]}'}
 
 
 
@@ -101,4 +111,4 @@ class PromptResource(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+  app.run(debug=False)

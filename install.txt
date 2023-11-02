@@ -22,3 +22,4 @@ pip install --upgrade pydub
 pip install --upgrade flask
 pip install --upgrade flask-restx
 pip install --upgrade fastapi
+pip install --upgrade uvicorn

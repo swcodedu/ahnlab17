@@ -82,7 +82,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts.prompt import PromptTemplate
 
-_template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+_template = """Given the following conversation and a follow up \
+  question, rephrase the follow up question to be a standalone \
+  question, in its original language.
 
 Chat History:
 {chat_history}

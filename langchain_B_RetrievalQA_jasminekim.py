@@ -22,7 +22,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("ORGANIZATION")
 sys.path.append(os.getenv("PYTHONPATH"))
 llm_model = "gpt-3.5-turbo"
-PDF_FILE = "./data/초중등교육총론.pdf"
+PDF_FILE = "./data/인공지능기초총론.pdf"
 CSV_FILE = "data/OutdoorClothingCatalog_1000.csv"
 CSV_FILE2 = "data/study_arms_raw.csv"
 
@@ -142,7 +142,7 @@ Stuff 접근 방식은 다음과 같습니다:
 Map-reduce 접근 방식은 다음 과정을 거칩니다:
 
     Map: 각 문서를 개별적으로 LLM에 전달하여 요약을 생성합니다.
-
+서
     Reduce: 생성된 각 문서 요약을 결합하여 최종 요약을 생성합니다.
 
     필요 시 문서 요약들을 반복적으로 결합하여 최종 요약을 만듭니다.
@@ -160,7 +160,7 @@ def test_pdf():
   print("="*30)
   vectordb : FAISS = load_vectordb_from_file(PDF_FILE)
   print("Number of vectors in the index:", vectordb.index.ntotal)
-  q = "인공지능 모델링 과정은 어떤 과정인가?"
+  q = "인공지능 기초 과정은 어떤 과정인가?"
 
   test_simple(vectordb, q)
   test_prompt(vectordb, q)

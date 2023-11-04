@@ -38,19 +38,48 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.schema.embeddings import Embeddings
 import numpy as np
 
+from wcwidth import wcswidth
+
+def align_text(text, width, align='left', fillchar=' '):
+    text_width = wcswidth(text)
+    padding = width - text_width
+    if padding <= 0:
+       return text
+
+    if align == 'right':
+        return fillchar * padding + text
+    elif align == 'center':
+        left_padding = padding // 2
+        right_padding = padding - left_padding
+        return fillchar * left_padding + text + fillchar * right_padding
+    else:  # left by default
+        return text + fillchar * padding
+
 
 def test_embed(embedding : Embeddings) -> None:
-  sentence1 = "i like dogs"
-  sentence2 = "i like canines"
-  sentence3 = "the weather is ugly outside"
+  sentences = [
+    "i like dogs",
+    "i like canines",
+    "나는 개를 좋아한다",
+    "J'aime les chiens",
+    "私は犬が好きです",
+    "Я люблю собак",
+    "ฉันชอบหมา",
+    "the weather is ugly outside"
+    ]
+  embeddings = []
 
-  embedding1 = embedding.embed_query(sentence1)
-  embedding2 = embedding.embed_query(sentence2)
-  embedding3 = embedding.embed_query(sentence3)
+  for sentence in sentences:
+    embeddings.append(embedding.embed_query(sentence))
 
-  print(f"np.dot(embedding1, embedding2) => {np.dot(embedding1, embedding2)}")
-  print(f"np.dot(embedding1, embedding3) => {np.dot(embedding1, embedding3)}")
-  print(f"np.dot(embedding2, embedding3) => {np.dot(embedding2, embedding3)}")
+  for idx, em1 in enumerate(embeddings) :
+    for idx2, em2 in enumerate(embeddings) :
+      if idx >= idx2:
+        continue
+      v = np.dot(em1, em2)
+      l = f"'{sentences[idx]}',"
+      r = f"'{sentences[idx2]}'"
+      print(f"np.dot({align_text(l, 22)} {align_text(r, 30)} => {v}")
   return None
 
 
